@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mara Dermatology - Skincare Regimen Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header with Mara Branding -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>mara</h1>
+                    <p class="tagline">DERMATOLOGY</p>
+                </div>
+                <p class="header-description">Skincare Regimen Assessment Platform</p>
+            </div>
+        </header>
+
+        <!-- Auth Section -->
+        <div id="authSection" class="auth-section">
+            <div class="auth-container">
+                <h2>Patient Assessment System</h2>
+                <p class="auth-subtitle">For healthcare professionals and researchers</p>
+
+                <div class="auth-tabs">
+                    <button class="tab-btn active" data-tab="login">Sign In</button>
+                    <button class="tab-btn" data-tab="register">Create Account</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="loginForm" class="auth-form active">
+                    <div class="form-group">
+                        <label for="loginUsername">Username</label>
+                        <input type="text" id="loginUsername" placeholder="Enter your username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Sign In</button>
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="registerUsername">Username</label>
+                        <input type="text" id="registerUsername" placeholder="Choose a username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Password</label>
+                        <input type="password" id="registerPassword" placeholder="Create a password" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Create Account</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Main App Section -->
+        <div id="appSection" class="app-section hidden">
+            <!-- Navigation -->
+            <nav class="navbar">
+                <div class="nav-brand">
+                    <span class="brand-icon">mara</span>
+                    <span class="brand-text">Assessment Platform</span>
+                </div>
+                <div class="nav-actions">
+                    <span id="userDisplay" class="user-info"></span>
+                    <button id="logoutBtn" class="btn-secondary">Sign Out</button>
+                </div>
+            </nav>
+
+            <!-- Tab Navigation -->
+            <div class="app-tabs">
+                <button class="tab-btn active" data-section="dashboard">Dashboard</button>
+                <button class="tab-btn" data-section="patients">Test Patients</button>
+                <button class="tab-btn" data-section="analytics">Analytics</button>
+            </div>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <div class="section-header">
+                    <h2>Welcome to Mara Dermatology Assessment Platform</h2>
+                    <p>Manage test patients and track skincare regimen questionnaire responses</p>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <h3>Total Test Patients</h3>
+                        <p class="stat-number" id="totalPatients">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Your Patients</h3>
+                        <p class="stat-number" id="yourPatients">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Questionnaires Completed</h3>
+                        <p class="stat-number" id="completedCount">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Completion Rate</h3>
+                        <p class="stat-number" id="completionRate">0%</p>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <h3>Quick Actions</h3>
+                    <button class="btn-primary" onclick="document.querySelector('[data-section=\"patients\"]').click()">
+                        Create New Test Patient
+                    </button>
+                </div>
+            </section>
+
+            <!-- Patients Section -->
+            <section id="patients" class="section">
+                <div class="section-header">
+                    <h2>Test Patients</h2>
+                    <p>Create and manage test patient records</p>
+                </div>
+
+                <!-- Create Patient Form -->
+                <div class="form-panel">
+                    <h3>Create New Test Patient</h3>
+                    <form id="createPatientForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="patientName">Patient Name</label>
+                                <input type="text" id="patientName" placeholder="e.g., Test Patient A" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="patientAge">Age</label>
+                                <input type="number" id="patientAge" min="1" max="120" placeholder="Age" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="patientGender">Gender</label>
+                                <select id="patientGender" required>
+                                    <option value="">Select gender</option>
+                                    <option value="M">Male</option>
+                                    <option value="F">Female</option>
+                                    <option value="O">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="patientSkinType">Skin Type</label>
+                                <select id="patientSkinType" required>
+                                    <option value="">Select skin type</option>
+                                    <option value="Oily">Oily</option>
+                                    <option value="Dry">Dry</option>
+                                    <option value="Combination">Combination</option>
+                                    <option value="Sensitive">Sensitive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary">Create Patient</button>
+                    </form>
+                </div>
+
+                <!-- Patients List -->
+                <div class="patients-list">
+                    <h3>Your Patients</h3>
+                    <div id="patientsList" class="patient-cards"></div>
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics" class="section">
+                <div class="section-header">
+                    <h2>Analytics & Data Export</h2>
+                    <p>View assessment results and export data</p>
+                </div>
+
+                <!-- Stats Summary -->
+                <div class="analytics-summary">
+                    <div class="summary-card">
+                        <h3>Total Assessments</h3>
+                        <p id="analyticsTotalCount">0</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Completion Rate</h3>
+                        <p id="analyticsCompletionRate">0%</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Most Common Pathway</h3>
+                        <p id="analyticsTopPathway">-</p>
+                    </div>
+                </div>
+
+                <!-- Patients Table -->
+                <div class="table-panel">
+                    <h3>All Patients (Global List)</h3>
+                    <div class="table-controls">
+                        <button id="exportBtn" class="btn-secondary">↓ Download CSV</button>
+                    </div>
+                    <div class="table-scroll">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Patient #</th>
+                                    <th>Name</th>
+                                    <th>Creator</th>
+                                    <th>Pathway</th>
+                                    <th>Tier</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analyticsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Questionnaire Modal -->
+        <div id="questionnaireModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Skincare Regimen Assessment</h2>
+                    <button class="modal-close" id="closeQuestionnaireBtn">&times;</button>
+                </div>
+                <div class="modal-body" id="modalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
