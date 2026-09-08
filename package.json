@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Test patient data collection system for skincare regimen questionnaire",
   "main": "server.js",
-  "type": "module",
   "engines": {
     "node": "18.x"
   },
