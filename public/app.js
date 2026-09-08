@@ -1,616 +1,391 @@
-// Global state
+// Global State
 let currentUser = null;
-let currentPatient = null;
+let currentPatients = [];
+let allPatients = [];
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('user');
-  if (saved) {
-    currentUser = JSON.parse(saved);
-    showDashboard();
-  } else {
-    showAuthScreen();
-  }
+// DOM Elements
+const authSection = document.getElementById('authSection');
+const appSection = document.getElementById('appSection');
+const loginForm = document.getElementById('loginForm');
+const registerForm = document.getElementById('registerForm');
+const logoutBtn = document.getElementById('logoutBtn');
+const userDisplay = document.getElementById('userDisplay');
+const questionnaireModal = document.getElementById('questionnaireModal');
+const closeQuestionnaireBtn = document.getElementById('closeQuestionnaireBtn');
+const modalBody = document.getElementById('modalBody');
 
-  // Auth form handlers
-  document.getElementById('login-form').addEventListener('submit', handleLogin);
-  document.getElementById('register-form').addEventListener('submit', handleRegister);
-  document.getElementById('create-patient-form').addEventListener('submit', handleCreatePatient);
+// Tab switching
+document.querySelectorAll('.auth-tabs .tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const tabName = e.target.dataset.tab;
+        document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+        document.querySelectorAll('.auth-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabName + 'Form').classList.add('active');
+        e.target.classList.add('active');
+    });
 });
 
-// Auth Handlers
-function switchAuthTab(tab) {
-  document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+// App section tabs
+document.querySelectorAll('.app-tabs .tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const sectionName = e.target.dataset.section;
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.app-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(sectionName).classList.add('active');
+        e.target.classList.add('active');
 
-  if (tab === 'login') {
-    document.getElementById('login-form').classList.add('active');
-    document.querySelectorAll('.tab-btn')[0].classList.add('active');
-  } else {
-    document.getElementById('register-form').classList.add('active');
-    document.querySelectorAll('.tab-btn')[1].classList.add('active');
-  }
-}
-
-async function handleLogin(e) {
-  e.preventDefault();
-  const username = document.getElementById('login-username').value;
-  const password = document.getElementById('login-password').value;
-  const errorDiv = document.getElementById('login-error');
-
-  try {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
+        // Load data when switching to analytics
+        if (sectionName === 'analytics') {
+            loadAnalytics();
+        }
     });
+});
 
-    const data = await response.json();
-    if (response.ok) {
-      currentUser = { id: data.user_id, username: data.username };
-      localStorage.setItem('user', JSON.stringify(currentUser));
-      showDashboard();
-    } else {
-      errorDiv.textContent = data.error || 'Login failed';
+// Auth Events
+loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('loginUsername').value;
+    const password = document.getElementById('loginPassword').value;
+
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        if (!response.ok) throw new Error('Login failed');
+
+        const user = await response.json();
+        currentUser = user;
+        showApp();
+    } catch (error) {
+        alert('Login failed: ' + error.message);
     }
-  } catch (err) {
-    errorDiv.textContent = 'Connection error: ' + err.message;
-  }
-}
+});
 
-async function handleRegister(e) {
-  e.preventDefault();
-  const username = document.getElementById('register-username').value;
-  const password = document.getElementById('register-password').value;
-  const errorDiv = document.getElementById('register-error');
+registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('registerUsername').value;
+    const password = document.getElementById('registerPassword').value;
 
-  if (password.length < 6) {
-    errorDiv.textContent = 'Password must be at least 6 characters';
-    return;
-  }
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
 
-  try {
-    const response = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
+        if (!response.ok) throw new Error('Registration failed');
 
-    const data = await response.json();
-    if (response.ok) {
-      currentUser = { id: data.user_id, username: data.username };
-      localStorage.setItem('user', JSON.stringify(currentUser));
-      showDashboard();
-    } else {
-      errorDiv.textContent = data.error || 'Registration failed';
+        const user = await response.json();
+        currentUser = user;
+        showApp();
+    } catch (error) {
+        alert('Registration failed: ' + error.message);
     }
-  } catch (err) {
-    errorDiv.textContent = 'Connection error: ' + err.message;
-  }
+});
+
+logoutBtn.addEventListener('click', () => {
+    currentUser = null;
+    currentPatients = [];
+    loginForm.reset();
+    registerForm.reset();
+    document.getElementById('loginUsername').value = '';
+    document.getElementById('loginPassword').value = '';
+    authSection.classList.remove('hidden');
+    appSection.classList.add('hidden');
+});
+
+// Show App
+function showApp() {
+    authSection.classList.add('hidden');
+    appSection.classList.remove('hidden');
+    userDisplay.textContent = `Logged in as: ${currentUser.username}`;
+    loadDashboard();
 }
 
-function logout() {
-  currentUser = null;
-  localStorage.removeItem('user');
-  location.reload();
-}
+// Dashboard
+async function loadDashboard() {
+    try {
+        // Load user's patients
+        const patientsRes = await fetch(`/api/patients/${currentUser.id}`);
+        currentPatients = await patientsRes.json();
 
-// Screen Management
-function showAuthScreen() {
-  document.getElementById('auth-screen').style.display = 'block';
-  document.getElementById('dashboard-screen').style.display = 'none';
-}
+        // Load all patients
+        const allRes = await fetch('/api/all-patients');
+        allPatients = await allRes.json();
 
-function showDashboard() {
-  document.getElementById('auth-screen').style.display = 'none';
-  document.getElementById('dashboard-screen').style.display = 'block';
-  document.getElementById('current-username').textContent = currentUser.username;
-  loadPatients();
-}
+        // Update stats
+        document.getElementById('totalPatients').textContent = allPatients.length;
+        document.getElementById('yourPatients').textContent = currentPatients.length;
 
-// Dashboard Navigation
-function switchDashboardTab(tab) {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+        const completedCount = allPatients.filter(p => p.completed).length;
+        document.getElementById('completedCount').textContent = completedCount;
 
-  document.getElementById(tab + '-tab').classList.add('active');
-  event.target.classList.add('active');
-
-  if (tab === 'analytics') {
-    loadAnalytics();
-  }
-}
-
-// Patient Management
-async function loadPatients() {
-  try {
-    const response = await fetch(`/api/patients/user/${currentUser.id}`);
-    const data = await response.json();
-
-    const list = document.getElementById('patients-list');
-    if (data.patients.length === 0) {
-      list.innerHTML = '<p class="empty-state">No test patients yet. Create one to get started.</p>';
-      return;
+        const completionRate = allPatients.length > 0
+            ? Math.round((completedCount / allPatients.length) * 100)
+            : 0;
+        document.getElementById('completionRate').textContent = completionRate + '%';
+    } catch (error) {
+        console.error('Dashboard error:', error);
     }
-
-    list.innerHTML = data.patients.map(p => `
-      <div class="patient-card" onclick="viewPatient(${p.id})">
-        <div class="patient-id">Patient #${p.global_id}</div>
-        <div class="patient-name">${p.patient_name}</div>
-        <div class="patient-info">
-          <span>${p.age ? p.age + ' years' : 'Age: —'}</span>
-          <span>${p.sex || '—'}</span>
-        </div>
-        <div class="patient-info">
-          Fitzpatrick: ${p.fitzpatrick || '—'} | Skin: ${p.skin_type || '—'}
-        </div>
-        <div class="patient-info">
-          Concern: ${p.primary_concern || '—'}
-        </div>
-        <span class="patient-status status-${p.questionnaire_status.replace('/', '-')}">${p.questionnaire_status}</span>
-        <div class="patient-actions">
-          <button class="btn btn-primary" onclick="event.stopPropagation(); startQuestionnaire(${p.id})">Start Questionnaire</button>
-          <button class="btn btn-secondary" onclick="event.stopPropagation(); viewPatient(${p.id})">Details</button>
-        </div>
-      </div>
-    `).join('');
-  } catch (err) {
-    console.error('Error loading patients:', err);
-  }
 }
 
-function openCreatePatientModal() {
-  document.getElementById('create-patient-modal').classList.add('active');
-}
+// Patients Section
+const createPatientForm = document.getElementById('createPatientForm');
+createPatientForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-function closeCreatePatientModal() {
-  document.getElementById('create-patient-modal').classList.remove('active');
-  document.getElementById('create-patient-form').reset();
-}
+    const name = document.getElementById('patientName').value;
+    const age = document.getElementById('patientAge').value;
+    const gender = document.getElementById('patientGender').value;
+    const skinType = document.getElementById('patientSkinType').value;
 
-async function handleCreatePatient(e) {
-  e.preventDefault();
-  const errorDiv = document.getElementById('create-error');
+    try {
+        const response = await fetch('/api/patients', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: currentUser.id,
+                name,
+                age: parseInt(age),
+                gender,
+                skinType
+            })
+        });
 
-  const patientData = {
-    user_id: currentUser.id,
-    patient_name: document.getElementById('patient-name').value,
-    age: document.getElementById('patient-age').value || null,
-    sex: document.getElementById('patient-sex').value,
-    fitzpatrick: document.getElementById('patient-fitzpatrick').value,
-    skin_type: document.getElementById('patient-skin-type').value,
-    primary_concern: document.getElementById('patient-concern').value,
-    sun_exposure: document.getElementById('patient-sun').value,
-    retinoid_history: document.getElementById('patient-retinoid').value
-  };
+        if (!response.ok) throw new Error('Failed to create patient');
 
-  try {
-    const response = await fetch('/api/patients', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(patientData)
-    });
-
-    const data = await response.json();
-    if (response.ok) {
-      closeCreatePatientModal();
-      loadPatients();
-    } else {
-      errorDiv.textContent = data.error || 'Failed to create patient';
+        const patient = await response.json();
+        createPatientForm.reset();
+        loadPatientsList();
+        loadDashboard();
+        alert(`Patient created: #${patient.patient_number} - ${patient.name}`);
+    } catch (error) {
+        alert('Error: ' + error.message);
     }
-  } catch (err) {
-    errorDiv.textContent = 'Connection error: ' + err.message;
-  }
-}
+});
 
-async function viewPatient(patientId) {
-  try {
-    const response = await fetch(`/api/patients/${patientId}`);
-    const data = response.json();
+async function loadPatientsList() {
+    try {
+        const response = await fetch(`/api/patients/${currentUser.id}`);
+        const patients = await response.json();
+        currentPatients = patients;
 
-    document.getElementById('patient-detail-title').textContent = `Patient #${(await data).patient.global_id} - ${(await data).patient.patient_name}`;
-    document.getElementById('patient-detail-content').innerHTML = `
-      <div style="padding: 20px;">
-        <h3>Patient Information</h3>
-        <p><strong>Name:</strong> ${(await data).patient.patient_name}</p>
-        <p><strong>Age:</strong> ${(await data).patient.age || '—'}</p>
-        <p><strong>Sex:</strong> ${(await data).patient.sex || '—'}</p>
-        <p><strong>Fitzpatrick Type:</strong> ${(await data).patient.fitzpatrick || '—'}</p>
-        <p><strong>Skin Type:</strong> ${(await data).patient.skin_type || '—'}</p>
-        <p><strong>Primary Concern:</strong> ${(await data).patient.primary_concern || '—'}</p>
-        <p><strong>Sun Exposure:</strong> ${(await data).patient.sun_exposure || '—'}</p>
-        <p><strong>Retinoid History:</strong> ${(await data).patient.retinoid_history || '—'}</p>
-        <p><strong>Status:</strong> ${(await data).patient.questionnaire_status}</p>
+        const patientsList = document.getElementById('patientsList');
+        patientsList.innerHTML = '';
 
-        <h3 style="margin-top: 24px;">Session Activity</h3>
-        ${((await data).session_log && (await data).session_log.length > 0 ?
-          `<ul style="margin: 12px 0 0 20px;">
-            ${(await data).session_log.map(log => `<li>${log.event_type}: ${log.event_detail} (${new Date(log.timestamp).toLocaleString()})</li>`).join('')}
-          </ul>`
-          : '<p>No activity yet</p>'
-        )}
-      </div>
-    `;
-    document.getElementById('patient-detail-modal').classList.add('active');
-  } catch (err) {
-    console.error('Error loading patient details:', err);
-  }
-}
-
-function closePatientDetailModal() {
-  document.getElementById('patient-detail-modal').classList.remove('active');
+        patients.forEach(patient => {
+            const card = document.createElement('div');
+            card.className = 'patient-card';
+            card.innerHTML = `
+                <div class="patient-info">
+                    <div class="patient-id">Patient #${patient.patient_number}</div>
+                    <div class="patient-name">${patient.name}</div>
+                    <div class="patient-details">
+                        <div>Age: ${patient.age || 'N/A'}</div>
+                        <div>Gender: ${patient.gender || 'N/A'}</div>
+                        <div>Skin Type: ${patient.skin_type || 'N/A'}</div>
+                    </div>
+                    <div class="patient-status">${patient.completed ? '✓ Completed' : '○ Pending'}</div>
+                </div>
+                <div class="patient-actions">
+                    <button onclick="startQuestionnaire(${patient.id}, ${patient.patient_number})">
+                        ${patient.completed ? 'View' : 'Start'} Questionnaire
+                    </button>
+                </div>
+            `;
+            patientsList.appendChild(card);
+        });
+    } catch (error) {
+        console.error('Error loading patients:', error);
+    }
 }
 
 // Questionnaire
-async function startQuestionnaire(patientId) {
-  currentPatient = patientId;
-  const modal = document.getElementById('questionnaire-modal');
-  const content = document.getElementById('questionnaire-content');
+async function startQuestionnaire(patientId, patientNumber) {
+    try {
+        const response = await fetch('/api/start-questionnaire', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ patientId, userId: currentUser.id })
+        });
 
-  content.innerHTML = `
-    <div style="padding: 24px;">
-      <div class="questionnaire-section">
-        <div class="questionnaire-title">Step 1: Safety Gates</div>
-        <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 13px;">
-          Check any that apply to this patient. Safety gates override all other logic.
-        </p>
-        <div class="checkbox-group">
-          <label>
-            <input type="checkbox" id="gate-pregnant"> Pregnant or breastfeeding
-          </label>
-          <label>
-            <input type="checkbox" id="gate-autoimmune"> Active autoimmune disease or immunosuppressant therapy
-          </label>
-          <label>
-            <input type="checkbox" id="gate-cancer"> Personal skin cancer history or lesion of concern
-          </label>
-          <label>
-            <input type="checkbox" id="gate-scarring"> Keloid or hypertrophic scarring tendency
-          </label>
-          <label style="margin-top: 12px;">
-            <input type="text" id="gate-allergies" placeholder="Known allergies (optional)" style="width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px;">
-          </label>
+        const data = await response.json();
+        const pathways = data.pathways;
+
+        let html = `
+            <div style="padding: 20px;">
+                <h3>Select Pathway for Patient #${patientNumber}</h3>
+                <div style="margin: 20px 0;">
+        `;
+
+        Object.entries(pathways).forEach(([key, pathway]) => {
+            html += `
+                <button style="
+                    display: block;
+                    width: 100%;
+                    padding: 15px;
+                    margin: 10px 0;
+                    text-align: left;
+                    border: 1px solid #ddd;
+                    background: #f5f5f5;
+                    cursor: pointer;
+                    font-size: 16px;
+                    font-weight: 500;
+                " onclick="selectPathway(${patientId}, '${key}', '${pathway.name}')">
+                    ${pathway.name}
+                </button>
+            `;
+        });
+
+        html += `
+                </div>
+            </div>
+        `;
+
+        modalBody.innerHTML = html;
+        questionnaireModal.classList.remove('hidden');
+    } catch (error) {
+        alert('Error starting questionnaire: ' + error.message);
+    }
+}
+
+function selectPathway(patientId, pathwayKey, pathwayName) {
+    const tiers = {
+        acne: {
+            1: 'Cleanser, Exfoliant, Moisturizer, Sunscreen',
+            2: 'Cleanser, Exfoliant, Toner, Moisturizer, Sunscreen, Acne Treatment',
+            3: 'Cleanser, Exfoliant, Toner, Serum, Moisturizer, Sunscreen, Prescription Retinoid, Spot Treatment'
+        },
+        rosacea: {
+            1: 'Gentle Cleanser, Moisturizer, Mineral Sunscreen',
+            2: 'Gentle Cleanser, Toner, Moisturizer, Mineral Sunscreen, Calming Serum',
+            3: 'Gentle Cleanser, Hydrating Toner, Calming Serum, Rich Moisturizer, Mineral Sunscreen, Niacinamide Treatment'
+        },
+        eczema: {
+            1: 'Gentle Cleanser, Heavy Moisturizer, Fragrance-Free Products',
+            2: 'Gentle Cleanser, Hydrating Toner, Heavy Moisturizer, Ceramide Treatment, Fragrance-Free',
+            3: 'Gentle Cleanser, Hydrating Toner, Serum, Heavy Moisturizer, Ceramide Cream, Colloidal Oatmeal Treatment, Fragrance-Free Sunscreen'
+        },
+        general: {
+            1: 'Cleanser, Moisturizer, Sunscreen',
+            2: 'Cleanser, Toner, Moisturizer, Sunscreen, Serum',
+            3: 'Cleanser, Toner, Exfoliant, Serum, Moisturizer, Sunscreen, Treatment Product'
+        }
+    };
+
+    const tierOptions = tiers[pathwayKey];
+
+    let html = `
+        <div style="padding: 20px;">
+            <h3>Select Tier - ${pathwayName}</h3>
+            <div style="margin: 20px 0;">
+    `;
+
+    Object.entries(tierOptions).forEach(([tier, regimen]) => {
+        html += `
+            <button style="
+                display: block;
+                width: 100%;
+                padding: 15px;
+                margin: 10px 0;
+                text-align: left;
+                border: 1px solid #ddd;
+                background: #f5f5f5;
+                cursor: pointer;
+                font-size: 14px;
+            " onclick="submitQuestionnaire(${patientId}, '${pathwayKey}', ${tier}, '${regimen}')">
+                <strong>Tier ${tier}:</strong> ${regimen}
+            </button>
+        `;
+    });
+
+    html += `
+            </div>
         </div>
-      </div>
+    `;
 
-      <div class="questionnaire-section">
-        <div class="questionnaire-title">Step 2: Select Primary Pathway</div>
-        <div id="pathway-options"></div>
-      </div>
-
-      <div class="questionnaire-section" id="tier-section" style="display: none;">
-        <div class="questionnaire-title">Step 3: Select Tier</div>
-        <div class="tier-selector" id="tier-options"></div>
-      </div>
-
-      <div class="questionnaire-section" id="regimen-section" style="display: none;">
-        <div class="questionnaire-title">Step 4: Recommended Regimen</div>
-        <div id="regimen-display"></div>
-      </div>
-
-      <div style="display: flex; gap: 12px; margin-top: 24px;">
-        <button class="btn btn-primary" onclick="submitQuestionnaire()">Save & Complete</button>
-        <button class="btn btn-secondary" onclick="closeQuestionnaireModal()">Cancel</button>
-      </div>
-    </div>
-  `;
-
-  // Pathway options
-  const pathways = [
-    { id: 'acne', name: 'ACNE', desc: 'Comedonal or inflammatory acne' },
-    { id: 'rosacea', name: 'ROSACEA', desc: 'Papulopustules, flushing, redness' },
-    { id: 'eczema', name: 'ECZEMA', desc: 'Barrier compromise, atopic dermatitis' },
-    { id: 'general', name: 'GENERAL', desc: 'Photoaging, maintenance, pigmentation' }
-  ];
-
-  document.getElementById('pathway-options').innerHTML = pathways.map(p => `
-    <div class="pathway-card" onclick="selectPathway('${p.id}')" id="pathway-${p.id}">
-      <div class="pathway-name">${p.name}</div>
-      <div class="pathway-description">${p.desc}</div>
-    </div>
-  `).join('');
-
-  modal.classList.add('active');
+    modalBody.innerHTML = html;
 }
 
-let selectedPathway = null;
-let selectedTier = null;
+async function submitQuestionnaire(patientId, pathway, tier, regimen) {
+    try {
+        const response = await fetch('/api/submit-questionnaire', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                patientId,
+                userId: currentUser.id,
+                pathway,
+                tier,
+                regimen
+            })
+        });
 
-function selectPathway(pathway) {
-  selectedPathway = pathway;
-  document.querySelectorAll('.pathway-card').forEach(c => c.classList.remove('selected'));
-  document.getElementById('pathway-' + pathway).classList.add('selected');
-  showTierOptions();
-}
+        if (!response.ok) throw new Error('Failed to submit');
 
-function showTierOptions() {
-  const tierSection = document.getElementById('tier-section');
-  tierSection.style.display = 'block';
-
-  const options = `
-    <button class="tier-btn" onclick="selectTier(1)">Tier 1<br><span style="font-size: 11px; font-weight: normal;">Mild/Entry</span></button>
-    <button class="tier-btn" onclick="selectTier(2)">Tier 2<br><span style="font-size: 11px; font-weight: normal;">Moderate</span></button>
-    <button class="tier-btn" onclick="selectTier(3)">Tier 3<br><span style="font-size: 11px; font-weight: normal;">Strong/Rx</span></button>
-  `;
-  document.getElementById('tier-options').innerHTML = options;
-}
-
-function selectTier(tier) {
-  selectedTier = tier;
-  document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('selected'));
-  event.target.closest('.tier-btn').classList.add('selected');
-  showRegimen();
-}
-
-function showRegimen() {
-  const regimens = {
-    acne: {
-      1: {
-        cleanser: 'Salicylic acid 0.5–1% foaming/gel',
-        am_antioxidant: 'Niacinamide 4%',
-        moisturizer: 'Oil-free gel with hyaluronic acid',
-        sunscreen: 'SPF 30, matte, non-comedogenic',
-        pm_retinoid: 'OTC encapsulated retinol, 2–3x/week'
-      },
-      2: {
-        cleanser: 'Salicylic acid 2% or Benzoyl peroxide 2.5%',
-        am_antioxidant: 'Compounded vitamin C + niacinamide',
-        moisturizer: 'Oil-free gel-cream + niacinamide',
-        sunscreen: 'SPF 50, tinted, matte',
-        pm_retinoid: 'Tretinoin 0.025% nightly'
-      },
-      3: {
-        cleanser: 'Benzoyl peroxide 5%',
-        am_antioxidant: 'GHK-Cu cream',
-        moisturizer: 'Barrier-repair gel-cream',
-        sunscreen: 'SPF 50, tinted, matte',
-        pm_retinoid: 'Compounded tretinoin 0.05–0.1%'
-      }
-    },
-    rosacea: {
-      1: {
-        cleanser: 'Non-foaming ceramide syndet, fragrance-free',
-        am_antioxidant: 'Niacinamide 4%',
-        moisturizer: 'Fragrance-free ceramide barrier cream',
-        sunscreen: 'SPF 30, fragrance-free, untinted',
-        pm_retinoid: 'Azelaic acid 10%'
-      },
-      2: {
-        cleanser: 'Non-foaming ceramide syndet + soothing agents',
-        am_antioxidant: 'Niacinamide 5%',
-        moisturizer: 'Ceramide barrier cream + niacinamide',
-        sunscreen: 'SPF 50, fragrance-free, tinted',
-        pm_retinoid: 'Azelaic acid 15–20%'
-      },
-      3: {
-        cleanser: 'Minimal-ingredient compounded wash',
-        am_antioxidant: 'Niacinamide 5% + azelaic acid',
-        moisturizer: 'Prescription barrier repair',
-        sunscreen: 'SPF 50, fragrance-free, tinted',
-        pm_retinoid: 'Azelaic acid + low-dose retinol'
-      }
-    },
-    eczema: {
-      1: {
-        cleanser: 'Cream cleanser, sulfate-free',
-        am_antioxidant: 'None (wait for barrier stability)',
-        moisturizer: 'Ceramide cream',
-        sunscreen: 'SPF 30, fragrance-free, minimal',
-        pm_retinoid: 'Bakuchiol 0.5%, 2x/week'
-      },
-      2: {
-        cleanser: 'Cream cleanser + colloidal oatmeal',
-        am_antioxidant: 'Compounded melatonin + ceramide serum',
-        moisturizer: 'Ceramide cream + petrolatum + pumpkin seed oil',
-        sunscreen: 'SPF 30, fragrance-free, minimal',
-        pm_retinoid: 'Encapsulated retinol 0.1–0.3%, 2–3x/week'
-      },
-      3: {
-        cleanser: 'Prescriber-directed medicated wash',
-        am_antioxidant: 'Compounded melatonin ± green tea',
-        moisturizer: 'Prescription barrier repair ± steroid',
-        sunscreen: 'SPF 30, fragrance-free, minimal',
-        pm_retinoid: 'Low-dose prescription retinoid'
-      }
-    },
-    general: {
-      1: {
-        cleanser: 'Gentle low-foaming gel, fragrance-free',
-        am_antioxidant: 'Niacinamide or green tea serum',
-        moisturizer: 'Standard ceramide moisturizer',
-        sunscreen: 'SPF 30–50, per preference',
-        pm_retinoid: 'OTC retinol, 2–3x/week'
-      },
-      2: {
-        cleanser: 'Cream cleanser (if dry) or gel (if oily)',
-        am_antioxidant: 'Vitamin C + ferulic acid + vitamin E',
-        moisturizer: 'Richer ceramide cream ± peptides',
-        sunscreen: 'SPF 50, tinted with iron oxides',
-        pm_retinoid: 'Tretinoin 0.025–0.05%'
-      },
-      3: {
-        cleanser: 'Active-ingredient cleanser (if secondary acne)',
-        am_antioxidant: 'Compounded vitamin C or GHK-Cu',
-        moisturizer: 'Ceramide + peptide complex',
-        sunscreen: 'SPF 50, reapplication-friendly',
-        pm_retinoid: 'Compounded tretinoin ± GHK-Cu'
-      }
+        questionnaireModal.classList.add('hidden');
+        loadPatientsList();
+        loadDashboard();
+        alert('Questionnaire submitted successfully!');
+    } catch (error) {
+        alert('Error: ' + error.message);
     }
-  };
-
-  const regimen = regimens[selectedPathway][selectedTier];
-  const regimeSection = document.getElementById('regimen-section');
-  regimeSection.style.display = 'block';
-
-  document.getElementById('regimen-display').innerHTML = `
-    <table style="width: 100%; border-collapse: collapse;">
-      <tr style="border-bottom: 1px solid var(--border);">
-        <td style="padding: 8px; font-weight: 600;">Cleanser</td>
-        <td style="padding: 8px;">${regimen.cleanser}</td>
-      </tr>
-      <tr style="border-bottom: 1px solid var(--border);">
-        <td style="padding: 8px; font-weight: 600;">AM Antioxidant</td>
-        <td style="padding: 8px;">${regimen.am_antioxidant}</td>
-      </tr>
-      <tr style="border-bottom: 1px solid var(--border);">
-        <td style="padding: 8px; font-weight: 600;">Moisturizer</td>
-        <td style="padding: 8px;">${regimen.moisturizer}</td>
-      </tr>
-      <tr style="border-bottom: 1px solid var(--border);">
-        <td style="padding: 8px; font-weight: 600;">Mineral Sunscreen</td>
-        <td style="padding: 8px;">${regimen.sunscreen}</td>
-      </tr>
-      <tr>
-        <td style="padding: 8px; font-weight: 600;">PM Retinoid</td>
-        <td style="padding: 8px;">${regimen.pm_retinoid}</td>
-      </tr>
-    </table>
-  `;
 }
 
-async function submitQuestionnaire() {
-  if (!selectedPathway || !selectedTier) {
-    alert('Please select a pathway and tier');
-    return;
-  }
-
-  const safetyData = {
-    user_id: currentUser.id,
-    pregnant_breastfeeding: document.getElementById('gate-pregnant').checked ? 1 : 0,
-    autoimmune: document.getElementById('gate-autoimmune').checked ? 1 : 0,
-    cancer_history: document.getElementById('gate-cancer').checked ? 1 : 0,
-    scarring_tendency: document.getElementById('gate-scarring').checked ? 1 : 0,
-    allergies: document.getElementById('gate-allergies').value
-  };
-
-  const regimens = {
-    acne: {
-      1: { cleanser: 'Salicylic acid 0.5–1%', am_antioxidant: 'Niacinamide 4%', moisturizer: 'Oil-free gel', sunscreen: 'SPF 30', pm_retinoid: 'OTC retinol' },
-      2: { cleanser: 'Salicylic acid 2%', am_antioxidant: 'Compounded vitamin C', moisturizer: 'Oil-free gel-cream', sunscreen: 'SPF 50', pm_retinoid: 'Tretinoin 0.025%' },
-      3: { cleanser: 'Benzoyl peroxide 5%', am_antioxidant: 'GHK-Cu', moisturizer: 'Barrier-repair', sunscreen: 'SPF 50', pm_retinoid: 'Tretinoin 0.05–0.1%' }
-    },
-    rosacea: {
-      1: { cleanser: 'Ceramide syndet', am_antioxidant: 'Niacinamide 4%', moisturizer: 'Ceramide cream', sunscreen: 'SPF 30', pm_retinoid: 'Azelaic acid 10%' },
-      2: { cleanser: 'Ceramide + soothing', am_antioxidant: 'Niacinamide 5%', moisturizer: 'Ceramide + niacinamide', sunscreen: 'SPF 50', pm_retinoid: 'Azelaic acid 15–20%' },
-      3: { cleanser: 'Compounded minimal', am_antioxidant: 'Niacinamide 5% + AA', moisturizer: 'Barrier repair', sunscreen: 'SPF 50', pm_retinoid: 'AA + retinol' }
-    },
-    eczema: {
-      1: { cleanser: 'Cream cleanser', am_antioxidant: 'None', moisturizer: 'Ceramide', sunscreen: 'SPF 30', pm_retinoid: 'Bakuchiol 0.5%' },
-      2: { cleanser: 'Cream + oatmeal', am_antioxidant: 'Melatonin + ceramide', moisturizer: 'Ceramide + oil', sunscreen: 'SPF 30', pm_retinoid: 'Retinol 0.1–0.3%' },
-      3: { cleanser: 'Medicated wash', am_antioxidant: 'Melatonin ± green tea', moisturizer: 'Barrier repair', sunscreen: 'SPF 30', pm_retinoid: 'Low-dose Rx' }
-    },
-    general: {
-      1: { cleanser: 'Gentle gel', am_antioxidant: 'Niacinamide', moisturizer: 'Ceramide', sunscreen: 'SPF 30–50', pm_retinoid: 'OTC retinol' },
-      2: { cleanser: 'Cream gel', am_antioxidant: 'Vitamin C+E', moisturizer: 'Rich ceramide', sunscreen: 'SPF 50', pm_retinoid: 'Tretinoin 0.025–0.05%' },
-      3: { cleanser: 'Active cleanser', am_antioxidant: 'Compounded vitamin C', moisturizer: 'Ceramide + peptides', sunscreen: 'SPF 50', pm_retinoid: 'Compounded tretinoin' }
-    }
-  };
-
-  try {
-    await fetch(`/api/patients/${currentPatient}/safety-gates`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(safetyData)
-    });
-
-    const regimen = regimens[selectedPathway][selectedTier];
-    await fetch(`/api/patients/${currentPatient}/regimen`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        user_id: currentUser.id,
-        pathway: selectedPathway,
-        tier: selectedTier,
-        ...regimen
-      })
-    });
-
-    closeQuestionnaireModal();
-    loadPatients();
-  } catch (err) {
-    alert('Error submitting questionnaire: ' + err.message);
-  }
-}
-
-function closeQuestionnaireModal() {
-  document.getElementById('questionnaire-modal').classList.remove('active');
-  selectedPathway = null;
-  selectedTier = null;
-}
+closeQuestionnaireBtn.addEventListener('click', () => {
+    questionnaireModal.classList.add('hidden');
+});
 
 // Analytics
 async function loadAnalytics() {
-  try {
-    const [allRes, failRes, usersRes] = await Promise.all([
-      fetch('/api/analytics/all-patients'),
-      fetch('/api/analytics/failures'),
-      fetch('/api/analytics/users')
-    ]);
+    try {
+        const analyticsRes = await fetch('/api/analytics');
+        const analytics = await analyticsRes.json();
 
-    const allData = await allRes.json();
-    const failData = await failRes.json();
-    const usersData = await usersRes.json();
+        document.getElementById('analyticsTotalCount').textContent = analytics.totalPatients;
+        document.getElementById('analyticsCompletionRate').textContent = analytics.completionRate + '%';
+        document.getElementById('analyticsTopPathway').textContent = analytics.topPathway || 'N/A';
 
-    const completed = allData.patients.filter(p => p.questionnaire_status === 'completed').length;
+        // Load all patients table
+        const allRes = await fetch('/api/all-patients');
+        allPatients = await allRes.json();
 
-    document.getElementById('total-patients').innerHTML = `
-      <div class="stat-value">${allData.total}</div>
-      <div class="stat-label">Total Patients</div>
-    `;
-    document.getElementById('completed-patients').innerHTML = `
-      <div class="stat-value">${completed}</div>
-      <div class="stat-label">Completed</div>
-    `;
-    document.getElementById('failed-patients').innerHTML = `
-      <div class="stat-value">${failData.total}</div>
-      <div class="stat-label">Failed/Incomplete</div>
-    `;
-    document.getElementById('total-users').innerHTML = `
-      <div class="stat-value">${usersData.users.length}</div>
-      <div class="stat-label">Active Users</div>
-    `;
+        const tableBody = document.getElementById('analyticsTable');
+        tableBody.innerHTML = '';
 
-    document.getElementById('all-patients-body').innerHTML = allData.patients.map(p => `
-      <tr onclick="viewPatient(${p.id})">
-        <td>#${p.global_id}</td>
-        <td>${p.username}</td>
-        <td>${p.patient_name}</td>
-        <td><span class="status-badge ${p.questionnaire_status.replace('/', '-')}">${p.questionnaire_status}</span></td>
-        <td>${p.pathway || '—'}</td>
-        <td>${p.tier || '—'}</td>
-        <td>${new Date(p.created_at).toLocaleDateString()}</td>
-        <td><button class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 12px;">View</button></td>
-      </tr>
-    `).join('');
-
-    document.getElementById('failures-body').innerHTML = failData.failures.map(f => `
-      <tr onclick="viewPatient(${f.id})">
-        <td>#${f.global_id}</td>
-        <td>${f.username}</td>
-        <td>${f.patient_name}</td>
-        <td><span class="status-badge ${f.questionnaire_status.replace('/', '-')}">${f.questionnaire_status}</span></td>
-        <td>${f.events || '—'}</td>
-      </tr>
-    `).join('');
-  } catch (err) {
-    console.error('Error loading analytics:', err);
-  }
+        allPatients.forEach(patient => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>#${patient.patient_number}</td>
+                <td>${patient.name}</td>
+                <td>${patient.username}</td>
+                <td>${patient.pathway || '-'}</td>
+                <td>${patient.tier || '-'}</td>
+                <td>${patient.completed ? '✓ Completed' : '○ Pending'}</td>
+                <td>
+                    <button style="padding: 5px 10px; font-size: 12px;" onclick="startQuestionnaire(${patient.id}, ${patient.patient_number})">
+                        ${patient.completed ? 'View' : 'Start'}
+                    </button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    } catch (error) {
+        console.error('Analytics error:', error);
+    }
 }
 
-// Export
-async function downloadCSV() {
-  try {
-    const response = await fetch('/api/export/csv');
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'patient_data.csv';
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-  } catch (err) {
-    alert('Error downloading CSV: ' + err.message);
-  }
-}
+// Export CSV
+document.getElementById('exportBtn').addEventListener('click', async () => {
+    try {
+        window.location.href = '/api/export-csv';
+    } catch (error) {
+        alert('Error exporting data: ' + error.message);
+    }
+});
+
+// Initial load
+console.log('App loaded');
