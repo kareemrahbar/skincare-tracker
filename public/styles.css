@@ -1,27 +1,28 @@
-/* Mara Dermatology - Exact Color Scheme */
+/* Mara Dermatology Professional Aesthetic */
 
 :root {
-    /* Mara's Color Palette */
-    --primary-black: #000000;
+    --primary-black: #1a1a1a;
     --primary-white: #ffffff;
-    --light-gray: #f8f8f8;
-    --medium-gray: #eeeeee;
-    --text-dark: #1a1a1a;
-    --text-light: #666666;
-    --text-muted: #999999;
-    --accent-gold: #c9a961;
-    --border-color: #e0e0e0;
-    --hover-bg: #f5f5f5;
+    --secondary-gray: #f9f7f4;
+    --tertiary-gray: #f0ebe5;
+    --text-dark: #2c2c2c;
+    --text-light: #6b6b6b;
+    --accent-color: #d4a574;
+    --accent-light: #e8d4c4;
+    --accent-line: #d4a574;
+    --success-color: #a89968;
+    --warning-color: #c9a961;
+    --error-color: #8b4513;
+    --border-color: #d9ccc2;
+    --hover-bg: #ede6dd;
 
     /* Typography */
     --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
     --font-size-base: 16px;
     --font-size-small: 14px;
     --font-size-large: 18px;
-    --font-size-xl: 24px;
     --font-weight-regular: 400;
     --font-weight-medium: 500;
-    --font-weight-semibold: 600;
     --font-weight-bold: 700;
 }
 
@@ -29,13 +30,11 @@
     :root {
         --primary-black: #0a0a0a;
         --primary-white: #1a1a1a;
-        --light-gray: #2a2a2a;
-        --medium-gray: #333333;
+        --secondary-gray: #2a2a2a;
+        --tertiary-gray: #3a3a3a;
         --text-dark: #e8e8e8;
-        --text-light: #b0b0b0;
-        --text-muted: #808080;
-        --accent-gold: #d4af8a;
-        --border-color: #3a3a3a;
+        --text-light: #a8a8a8;
+        --border-color: #404040;
         --hover-bg: #2a2a2a;
     }
 }
@@ -63,8 +62,8 @@ html, body {
 /* Header with Mara Branding */
 .header {
     background-color: var(--primary-white);
-    border-bottom: 1px solid var(--border-color);
-    padding: 50px 20px;
+    border-bottom: 2px solid var(--accent-line);
+    padding: 40px 20px;
     text-align: center;
 }
 
@@ -74,40 +73,37 @@ html, body {
 }
 
 .logo {
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .logo h1 {
-    font-size: 56px;
+    font-size: 48px;
     font-weight: var(--font-weight-bold);
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     color: var(--text-dark);
     margin: 0;
-    text-transform: lowercase;
 }
 
 .logo .tagline {
-    font-size: 11px;
-    letter-spacing: 4px;
-    color: var(--text-muted);
-    font-weight: var(--font-weight-regular);
-    margin: 8px 0 0 0;
-    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--text-light);
+    font-weight: var(--font-weight-medium);
+    margin: 5px 0 0 0;
 }
 
 .header-description {
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-large);
     color: var(--text-light);
     font-weight: var(--font-weight-regular);
-    margin-top: 15px;
-    letter-spacing: 0.5px;
+    margin-top: 10px;
 }
 
 /* Navigation Bar */
 .navbar {
     background-color: var(--primary-white);
     border-bottom: 1px solid var(--border-color);
-    padding: 20px;
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -116,22 +112,19 @@ html, body {
 .nav-brand {
     display: flex;
     align-items: center;
-    gap: 12px;
-    font-weight: var(--font-weight-semibold);
+    gap: 10px;
+    font-weight: var(--font-weight-medium);
 }
 
 .brand-icon {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: var(--font-weight-bold);
     color: var(--text-dark);
-    letter-spacing: 2px;
-    text-transform: lowercase;
 }
 
 .brand-text {
     font-size: var(--font-size-small);
-    color: var(--text-muted);
-    letter-spacing: 0.5px;
+    color: var(--text-light);
 }
 
 .nav-actions {
@@ -152,12 +145,12 @@ html, body {
     align-items: center;
     justify-content: center;
     padding: 60px 20px;
-    background-color: var(--light-gray);
+    background-color: var(--secondary-gray);
 }
 
 .auth-container {
     background-color: var(--primary-white);
-    padding: 60px 40px;
+    padding: 50px 40px;
     width: 100%;
     max-width: 450px;
     border: 1px solid var(--border-color);
@@ -165,44 +158,54 @@ html, body {
 
 .auth-container h2 {
     font-size: 28px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     color: var(--text-dark);
     font-weight: var(--font-weight-bold);
-    letter-spacing: 0.5px;
 }
 
 .auth-subtitle {
     color: var(--text-light);
     font-size: var(--font-size-small);
-    margin-bottom: 35px;
-    letter-spacing: 0.3px;
-}
-
-/* Tab Navigation */
-.auth-tabs {
-    display: flex;
-    gap: 0;
     margin-bottom: 30px;
-    border-bottom: 1px solid var(--border-color);
 }
 
+.auth-link {
+    margin-top: 20px;
+    text-align: center;
+    font-size: var(--font-size-small);
+    color: var(--text-light);
+}
+
+.auth-link a {
+    color: var(--accent-color);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.auth-link a:hover {
+    color: var(--warning-color);
+    text-decoration: underline;
+}
+
+/* Tab Navigation - for app tabs only */
 .tab-btn {
     flex: 1;
     padding: 15px 0;
     border: none;
     background: none;
     font-size: var(--font-size-base);
-    color: var(--text-muted);
+    color: var(--text-light);
     cursor: pointer;
     font-weight: var(--font-weight-medium);
     border-bottom: 2px solid transparent;
     transition: all 0.3s ease;
-    letter-spacing: 0.5px;
 }
 
 .tab-btn.active {
     color: var(--text-dark);
-    border-bottom-color: var(--accent-gold);
+    border-bottom-color: var(--accent-line);
 }
 
 .tab-btn:hover {
@@ -221,18 +224,17 @@ html, body {
     gap: 0;
     border-bottom: 1px solid var(--border-color);
     padding: 0 20px;
-    background-color: var(--light-gray);
+    background-color: var(--secondary-gray);
 }
 
 .app-tabs .tab-btn {
-    padding: 16px 25px;
+    padding: 15px 25px;
     border-bottom: 2px solid transparent;
-    color: var(--text-muted);
-    font-weight: var(--font-weight-medium);
+    color: var(--text-light);
 }
 
 .app-tabs .tab-btn.active {
-    border-bottom-color: var(--accent-gold);
+    border-bottom-color: var(--accent-line);
     color: var(--text-dark);
 }
 
@@ -252,21 +254,19 @@ html, body {
 
 .section-header {
     margin-bottom: 40px;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 25px;
+    border-bottom: 2px solid var(--tertiary-gray);
+    padding-bottom: 20px;
 }
 
 .section-header h2 {
     font-size: 32px;
     font-weight: var(--font-weight-bold);
     margin-bottom: 8px;
-    letter-spacing: 0.5px;
 }
 
 .section-header p {
     color: var(--text-light);
     font-size: var(--font-size-base);
-    letter-spacing: 0.3px;
 }
 
 /* Dashboard Grid */
@@ -278,7 +278,7 @@ html, body {
 }
 
 .stat-card {
-    background-color: var(--light-gray);
+    background-color: var(--secondary-gray);
     padding: 30px;
     border: 1px solid var(--border-color);
     text-align: center;
@@ -287,15 +287,14 @@ html, body {
 
 .stat-card:hover {
     background-color: var(--hover-bg);
-    border-color: var(--accent-gold);
 }
 
 .stat-card h3 {
     font-size: var(--font-size-small);
-    color: var(--text-muted);
-    font-weight: var(--font-weight-semibold);
-    margin-bottom: 16px;
-    letter-spacing: 1.2px;
+    color: var(--text-light);
+    font-weight: var(--font-weight-medium);
+    margin-bottom: 15px;
+    letter-spacing: 1px;
     text-transform: uppercase;
 }
 
@@ -307,8 +306,8 @@ html, body {
 
 /* Form Panels */
 .form-panel {
-    background-color: var(--light-gray);
-    padding: 35px;
+    background-color: var(--secondary-gray);
+    padding: 30px;
     border: 1px solid var(--border-color);
     margin-bottom: 30px;
 }
@@ -317,7 +316,6 @@ html, body {
     font-size: 20px;
     margin-bottom: 25px;
     font-weight: var(--font-weight-bold);
-    letter-spacing: 0.5px;
 }
 
 .form-row {
@@ -334,7 +332,7 @@ html, body {
 
 .form-group label {
     font-size: var(--font-size-small);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     margin-bottom: 8px;
     color: var(--text-dark);
     letter-spacing: 0.5px;
@@ -349,43 +347,41 @@ html, body {
     color: var(--text-dark);
     font-family: var(--font-sans);
     font-size: var(--font-size-base);
-    transition: all 0.3s ease;
+    transition: border-color 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: var(--accent-gold);
-    background-color: var(--primary-white);
+    border-color: var(--accent-line);
 }
 
 /* Buttons */
 .btn-primary {
     padding: 12px 30px;
-    background-color: var(--text-dark);
+    background-color: var(--accent-color);
     color: var(--primary-white);
     border: none;
     font-size: var(--font-size-base);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
     transition: all 0.3s ease;
     letter-spacing: 0.5px;
 }
 
 .btn-primary:hover {
-    background-color: var(--accent-gold);
-    color: var(--text-dark);
+    background-color: var(--warning-color);
     transform: translateY(-2px);
 }
 
 .btn-secondary {
     padding: 12px 30px;
-    background-color: var(--light-gray);
+    background-color: var(--secondary-gray);
     color: var(--text-dark);
     border: 1px solid var(--border-color);
     font-size: var(--font-size-base);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     cursor: pointer;
     transition: all 0.3s ease;
     letter-spacing: 0.5px;
@@ -393,7 +389,6 @@ html, body {
 
 .btn-secondary:hover {
     background-color: var(--hover-bg);
-    border-color: var(--accent-gold);
 }
 
 /* Patient Cards */
@@ -404,15 +399,15 @@ html, body {
 }
 
 .patient-card {
-    background-color: var(--light-gray);
+    background-color: var(--secondary-gray);
     padding: 25px;
     border: 1px solid var(--border-color);
     transition: all 0.3s ease;
 }
 
 .patient-card:hover {
-    border-color: var(--accent-gold);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-color: var(--text-dark);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .patient-info {
@@ -421,17 +416,15 @@ html, body {
 
 .patient-id {
     font-size: var(--font-size-small);
-    color: var(--text-muted);
+    color: var(--text-light);
     text-transform: uppercase;
     letter-spacing: 1px;
-    font-weight: var(--font-weight-medium);
 }
 
 .patient-name {
     font-size: 20px;
     font-weight: var(--font-weight-bold);
     margin: 8px 0 12px 0;
-    letter-spacing: 0.3px;
 }
 
 .patient-details {
@@ -444,8 +437,7 @@ html, body {
     padding-top: 15px;
     border-top: 1px solid var(--border-color);
     font-size: var(--font-size-small);
-    color: var(--text-dark);
-    font-weight: var(--font-weight-medium);
+    color: var(--success-color);
 }
 
 .patient-actions {
@@ -462,18 +454,16 @@ html, body {
     background-color: var(--primary-white);
     cursor: pointer;
     transition: all 0.3s ease;
-    font-weight: var(--font-weight-medium);
 }
 
 .patient-actions button:hover {
     background-color: var(--hover-bg);
-    border-color: var(--accent-gold);
 }
 
 /* Table Panel */
 .table-panel {
-    background-color: var(--light-gray);
-    padding: 35px;
+    background-color: var(--secondary-gray);
+    padding: 30px;
     border: 1px solid var(--border-color);
 }
 
@@ -509,9 +499,8 @@ html, body {
     text-align: left;
     font-weight: var(--font-weight-bold);
     text-transform: uppercase;
-    letter-spacing: 0.8px;
-    border-bottom: 2px solid var(--accent-gold);
-    color: var(--text-dark);
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--accent-line);
 }
 
 .data-table td {
@@ -530,7 +519,7 @@ html, body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.4);
+    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -561,7 +550,6 @@ html, body {
 .modal-header h2 {
     font-size: 24px;
     font-weight: var(--font-weight-bold);
-    letter-spacing: 0.5px;
 }
 
 .modal-close {
@@ -570,11 +558,10 @@ html, body {
     font-size: 28px;
     cursor: pointer;
     color: var(--text-light);
-    transition: color 0.3s ease;
 }
 
 .modal-close:hover {
-    color: var(--accent-gold);
+    color: var(--text-dark);
 }
 
 .modal-body {
@@ -583,7 +570,7 @@ html, body {
 
 /* Quick Actions */
 .quick-actions {
-    background-color: var(--light-gray);
+    background-color: var(--secondary-gray);
     padding: 30px;
     border: 1px solid var(--border-color);
 }
@@ -592,7 +579,6 @@ html, body {
     font-size: 18px;
     margin-bottom: 20px;
     font-weight: var(--font-weight-bold);
-    letter-spacing: 0.5px;
 }
 
 /* Analytics Summary */
@@ -604,24 +590,18 @@ html, body {
 }
 
 .summary-card {
-    background-color: var(--light-gray);
+    background-color: var(--secondary-gray);
     padding: 25px;
     border: 1px solid var(--border-color);
     text-align: center;
-    transition: all 0.3s ease;
-}
-
-.summary-card:hover {
-    border-color: var(--accent-gold);
 }
 
 .summary-card h3 {
     font-size: var(--font-size-small);
-    color: var(--text-muted);
+    color: var(--text-light);
     margin-bottom: 12px;
     text-transform: uppercase;
     letter-spacing: 1px;
-    font-weight: var(--font-weight-semibold);
 }
 
 .summary-card p {
@@ -642,11 +622,11 @@ html, body {
     }
 
     .logo h1 {
-        font-size: 40px;
+        font-size: 36px;
     }
 
     .auth-container {
-        padding: 40px 25px;
+        padding: 30px 20px;
     }
 
     .section {
@@ -692,7 +672,7 @@ html, body {
     .summary-card,
     .quick-actions,
     .auth-container {
-        background-color: var(--light-gray);
+        background-color: var(--secondary-gray);
     }
 
     .modal-content {
