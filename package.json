@@ -1,24 +1,21 @@
 {
-  "name": "skincare-tracker",
+  "name": "mara-dermatology-tracker",
   "version": "1.0.0",
-  "description": "Mara Dermatology - Skincare Regimen Assessment Platform",
+  "description": "Mara Dermatology Skincare Regimen Assessment Platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "test": "node server.js"
   },
-  "keywords": ["dermatology", "skincare", "assessment"],
-  "author": "",
-  "license": "ISC",
   "engines": {
     "node": "18.x"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "better-sqlite3": "^9.2.2",
+    "express": "^4.19.2",
+    "better-sqlite3": "^10.0.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "body-parser": "^1.20.2",
-    "dotenv": "^16.3.1"
+    "body-parser": "^1.20.3",
+    "dotenv": "^16.4.5"
   }
 }
