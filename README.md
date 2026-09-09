@@ -1,57 +1,98 @@
 # Mara Dermatology - Skincare Regimen Assessment Platform
 
-A professional web application for collecting and analyzing test patient data through an interactive skincare regimen questionnaire.
-
-## Features
-
-- **Multi-User Accounts** - Each researcher has their own login
-- **Global Patient Numbering** - Sequential patient IDs across all users
-- **Interactive Questionnaire** - Guided assessment with safety gates, pathway selection, and tier recommendations
-- **Analytics Dashboard** - View all patients, completion rates, and pathway distribution
-- **Data Export** - Download all patient data as CSV
-- **Professional Design** - Clean, medical-grade interface
+A professional web application for healthcare professionals to manage test patients and track skincare regimen questionnaire responses.
 
 ## Quick Start
 
-### Local Development
-```bash
-npm install
-npm start
-# Visit http://localhost:3000
-```
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start the server: `npm start`
+4. Open http://localhost:3000 in your browser
 
-### Deploy to Render
-1. Push to GitHub
-2. Go to render.com
-3. Connect repository
-4. Deploy
+## Tech Stack
 
-## Technology Stack
+- **Backend:** Node.js with Express.js
+- **Database:** SQLite (better-sqlite3)
+- **Frontend:** HTML5, CSS3, Vanilla JavaScript
+- **Security:** bcryptjs for password hashing, CORS enabled
 
-- Backend: Node.js + Express
-- Database: SQLite (better-sqlite3)
-- Frontend: HTML/CSS/JavaScript
-- Authentication: bcryptjs
-- Deployment: Render, Heroku, Railway, or Vercel
+## Features
+
+- User authentication (register/login)
+- Create and manage test patient profiles
+- Multi-tier skincare regimen questionnaire
+- Global patient tracking across all users
+- Analytics dashboard with completion rates
+- CSV data export
+- Responsive design with dark mode support
+- Professional Mara Dermatology branding
 
 ## API Endpoints
 
-- `POST /api/register` - Create account
-- `POST /api/login` - Sign in
-- `POST /api/patients` - Create test patient
+### Authentication
+- `POST /api/register` - Create new user account
+- `POST /api/login` - User login
+
+### Patients
+- `POST /api/patients` - Create new test patient
 - `GET /api/patients/:userId` - Get user's patients
 - `GET /api/all-patients` - Get all patients (global)
-- `POST /api/submit-questionnaire` - Submit assessment
-- `GET /api/analytics` - Get analytics data
-- `GET /api/export-csv` - Download CSV export
+
+### Questionnaire
+- `POST /api/start-questionnaire` - Start questionnaire flow
+- `POST /api/submit-questionnaire` - Submit questionnaire results
+
+### Analytics
+- `GET /api/analytics` - Get platform analytics
+- `GET /api/export-csv` - Export all patient data as CSV
 
 ## Database Schema
 
-- **users** - User accounts with hashed passwords
-- **patients** - Test patient records with demographics
-- **regimen_assignments** - Questionnaire results and recommended regimens
-- **session_log** - All user actions with timestamps
+### users
+- id (Primary Key)
+- username (Unique)
+- password (Hashed)
+- created_at
 
-## License
+### patients
+- id (Primary Key)
+- patient_number (Unique, Sequential)
+- user_id (Foreign Key)
+- name
+- age
+- gender
+- skin_type
+- created_at
 
-ISC
+### regimen_assignments
+- id (Primary Key)
+- patient_id (Foreign Key)
+- pathway (Acne, Rosacea, Eczema, General)
+- tier (1-3)
+- regimen (Product recommendation)
+- completed
+- created_at
+
+### session_log
+- id (Primary Key)
+- user_id (Foreign Key)
+- action
+- details
+- timestamp
+
+## Deployment on Render
+
+1. Push code to GitHub repository
+2. Connect GitHub to Render
+3. Set environment: Node
+4. Build command: `npm install`
+5. Start command: `npm start`
+
+The application will deploy automatically when you push to the main branch.
+
+## Development Notes
+
+- All patient numbers are globally sequential (never duplicate across users)
+- Patient data persists across sessions in SQLite database
+- Security headers configured for safe JavaScript execution
+- Responsive design works on mobile, tablet, and desktop
