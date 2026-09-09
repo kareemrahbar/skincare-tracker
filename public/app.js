@@ -14,16 +14,25 @@ const questionnaireModal = document.getElementById('questionnaireModal');
 const closeQuestionnaireBtn = document.getElementById('closeQuestionnaireBtn');
 const modalBody = document.getElementById('modalBody');
 
-// Tab switching
-document.querySelectorAll('.auth-tabs .tab-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        const tabName = e.target.dataset.tab;
-        document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
-        document.querySelectorAll('.auth-tabs .tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabName + 'Form').classList.add('active');
-        e.target.classList.add('active');
+// Auth form switching
+const switchToRegister = document.getElementById('switchToRegister');
+const switchToLogin = document.getElementById('switchToLogin');
+
+if (switchToRegister) {
+    switchToRegister.addEventListener('click', (e) => {
+        e.preventDefault();
+        loginForm.classList.remove('active');
+        registerForm.classList.add('active');
     });
-});
+}
+
+if (switchToLogin) {
+    switchToLogin.addEventListener('click', (e) => {
+        e.preventDefault();
+        registerForm.classList.remove('active');
+        loginForm.classList.add('active');
+    });
+}
 
 // App section tabs
 document.querySelectorAll('.app-tabs .tab-btn').forEach(btn => {
@@ -134,6 +143,8 @@ async function loadDashboard() {
 
 // Patients Section
 const createPatientForm = document.getElementById('createPatientForm');
+let newPatientForQuestionnaire = null;
+
 createPatientForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -161,7 +172,10 @@ createPatientForm.addEventListener('submit', async (e) => {
         createPatientForm.reset();
         loadPatientsList();
         loadDashboard();
-        alert(`Patient created: #${patient.patient_number} - ${patient.name}`);
+
+        // Store patient info and start questionnaire immediately
+        newPatientForQuestionnaire = patient;
+        startQuestionnaire(patient.id, patient.patient_number);
     } catch (error) {
         alert('Error: ' + error.message);
     }
@@ -329,7 +343,14 @@ async function submitQuestionnaire(patientId, pathway, tier, regimen) {
         questionnaireModal.classList.add('hidden');
         loadPatientsList();
         loadDashboard();
-        alert('Questionnaire submitted successfully!');
+
+        // Show success message with patient number if this was a newly created patient
+        if (newPatientForQuestionnaire) {
+            alert(`Patient #${newPatientForQuestionnaire.patient_number} created and questionnaire completed successfully!`);
+            newPatientForQuestionnaire = null;
+        } else {
+            alert('Questionnaire submitted successfully!');
+        }
     } catch (error) {
         alert('Error: ' + error.message);
     }
