@@ -1,0 +1,36 @@
+{
+  "name": "mara-dermatology-algorithm",
+  "version": "2.0.0",
+  "description": "Mara Dermatology Clinical Skincare Regimen Algorithm Platform",
+  "main": "server_algorithm.js",
+  "scripts": {
+    "start": "node server_algorithm.js",
+    "dev": "nodemon server_algorithm.js",
+    "test": "jest",
+    "test:integration": "jest --testMatch='**/*.integration.test.js'",
+    "test:e2e": "cypress run",
+    "load-test": "artillery run load-test.yml"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "better-sqlite3": "^9.0.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2",
+    "jsonwebtoken": "^9.1.1",
+    "dotenv": "^16.3.1",
+    "cookie-parser": "^1.4.6",
+    "express-rate-limit": "^7.0.0",
+    "express-fingerprint": "^2.0.0",
+    "compression": "^1.7.4",
+    "nodemailer": "^6.9.7"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "cypress": "^13.6.2",
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
